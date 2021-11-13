@@ -15,12 +15,17 @@ private:
   VkFormat imageFormat;
   VkExtent2D extent;
 
-  void createImageViews(const std::vector<VkImage> &images, VkFormat imageFormat);
+  void createImageViews(const std::vector<VkImage> &images,
+                        VkFormat imageFormat);
 
 public:
   SwapChain(std::shared_ptr<Device> device, int width, int height);
 
   VkSwapchainKHR handle();
+
+  VkExtent2D getExtent();
+
+  VkFormat getImageFormat();
 
   ~SwapChain();
 };

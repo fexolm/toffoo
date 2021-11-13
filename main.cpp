@@ -1,5 +1,8 @@
 #include "vk/Device.h"
 #include "vk/Instance.h"
+#include "vk/Pipeline.h"
+#include "vk/RenderPass.h"
+#include "vk/Shader.h"
 #include "vk/Surface.h"
 #include "vk/SwapChain.h"
 
@@ -34,6 +37,25 @@ int main() {
   glfwGetFramebufferSize(window, &width, &height);
 
   auto swapchain = toffoo::vk::createSwapchain(device, width, height);
+
+  auto renderPass = toffoo::vk::craeteRenderPass(swapchain, device);
+
+  toffoo::vk::GraphicsPipelineBuilder pipelineBuilder(device, renderPass);
+
+  pipelineBuilder.addVertexShader(toffoo::vk::createShader(device, "vert.spv"));
+  pipelineBuilder.addFragmentShader(
+      toffoo::vk::createShader(device, "frag.spv"));
+
+  pipelineBuilder.addVertexInputState();
+  pipelineBuilder.addInputAssemblyState();
+  pipelineBuilder.addViewportState(swapchain, width, height);
+  pipelineBuilder.addRasterizationState();
+  pipelineBuilder.addMultisamplintState();
+  pipelineBuilder.addColorBlendState();
+  pipelineBuilder.addDynamicState();
+  pipelineBuilder.setupPipelineLayout();
+
+  auto pipeline = pipelineBuilder.build();
 
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();

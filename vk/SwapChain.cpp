@@ -128,6 +128,8 @@ SwapChain::SwapChain(std::shared_ptr<Device> device, int width, int height)
                           images.data());
 
   createImageViews(images, surfaceFormat.format);
+
+  imageFormat = surfaceFormat.format;
 }
 
 SwapChain::~SwapChain() {
@@ -138,6 +140,10 @@ SwapChain::~SwapChain() {
 }
 
 VkSwapchainKHR SwapChain::handle() { return swapchain; }
+
+VkExtent2D SwapChain::getExtent() { return extent; }
+
+VkFormat SwapChain::getImageFormat() { return imageFormat; }
 
 void SwapChain::createImageViews(const std::vector<VkImage> &images,
                                  VkFormat imageFormat) {
