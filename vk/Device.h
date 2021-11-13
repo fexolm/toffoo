@@ -11,6 +11,9 @@ private:
   VkDevice device;
   VkPhysicalDevice physicalDevice;
 
+  uint32_t graphicsFamilyIdx;
+  uint32_t presentFamilyIdx;
+
   VkQueue graphicsQueue;
   VkQueue presentQueue;
 
@@ -22,9 +25,18 @@ public:
 
   VkDevice handle();
 
+  uint32_t getGraphicsFamilyIdx();
+  uint32_t getPresentFamilyIdx();
+
   VkPhysicalDevice getPhysicalDevice();
 
   std::shared_ptr<Surface> getSurface();
+
+  VkQueue getGraphicsQueue();
+  VkQueue getPresentQueue();
+
+  void waitIdle();
+  void waitPresentQueue();
 
   ~Device();
 };

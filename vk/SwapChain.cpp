@@ -1,5 +1,7 @@
 #include "SwapChain.h"
 #include "Device.h"
+#include "RenderPass.h"
+#include "Semaphore.h"
 #include "Surface.h"
 #include "Utils.h"
 #include <algorithm>
@@ -132,6 +134,25 @@ SwapChain::SwapChain(std::shared_ptr<Device> device, int width, int height)
   imageFormat = surfaceFormat.format;
 }
 
+uint32_t SwapChain::getNextImageIdx(Semaphore &semaphore) {
+  uint32_t idx;
+  vkAcquireNextImageKHR(device->handle(), swapchain, UINT64_MAX,
+                        semaphore.handle(), VK_NULL_HANDLE, &idx);
+  return idx;
+}
+
+void SwapChain::present(uint32_t imgIdx, Semaphore &wait) {
+  VkSemaphore waitHandle = wait.handle();
+  VkPresentInfoKHR presentInfo{.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+                               .waitSemaphoreCount = 1,
+                               .pWaitSemaphores = &waitHandle,
+                               .swapchainCount = 1,
+                               .pSwapchains = &swapchain,
+                               .pImageIndices = &imgIdx,
+                               .pResults = nullptr};
+  vkQueuePresentKHR(device->getPresentQueue(), &presentInfo);
+}
+
 SwapChain::~SwapChain() {
   for (auto &img : imageViews) {
     vkDestroyImageView(device->handle(), img, nullptr);
@@ -170,6 +191,8 @@ void SwapChain::createImageViews(const std::vector<VkImage> &images,
                                       &imageViews[i]));
   }
 }
+
+std::vector<VkImageView> &SwapChain::getImageViews() { return imageViews; }
 
 std::shared_ptr<SwapChain> createSwapchain(std::shared_ptr<Device> device,
                                            int width, int height) {

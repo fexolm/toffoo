@@ -108,9 +108,6 @@ Device::Device(std::shared_ptr<Instance> instance,
                std::shared_ptr<Surface> surface)
     : instance(instance), surface(surface) {
   physicalDevice = peekDevice(instance->handle(), surface->handle());
-  uint32_t graphicsFamilyIdx;
-  uint32_t presentFamilyIdx;
-
   findGraphicsFamily(physicalDevice, graphicsFamilyIdx);
   findPresentFamily(physicalDevice, surface->handle(), presentFamilyIdx);
 
@@ -154,11 +151,22 @@ Device::Device(std::shared_ptr<Instance> instance,
 
 VkDevice Device::handle() { return device; }
 
+VkQueue Device::getGraphicsQueue() { return graphicsQueue; }
+
+VkQueue Device::getPresentQueue() { return presentQueue; }
+
 VkPhysicalDevice Device::getPhysicalDevice() { return physicalDevice; }
 
 std::shared_ptr<Surface> Device::getSurface() { return surface; }
 
+uint32_t Device::getGraphicsFamilyIdx() { return graphicsFamilyIdx; }
+uint32_t Device::getPresentFamilyIdx() { return presentFamilyIdx; }
+
 Device::~Device() { vkDestroyDevice(device, nullptr); }
+
+void Device::waitIdle() { vkDeviceWaitIdle(device); }
+
+void Device::waitPresentQueue() { vkQueueWaitIdle(presentQueue); }
 
 std::shared_ptr<Device> createDevice(std::shared_ptr<Instance> instance,
                                      std::shared_ptr<Surface> surface) {

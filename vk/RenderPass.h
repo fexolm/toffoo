@@ -21,6 +21,6 @@ public:
 };
 
 std::shared_ptr<RenderPass>
-craeteRenderPass(std::shared_ptr<SwapChain> swapchain,
+createRenderPass(std::shared_ptr<SwapChain> swapchain,
                  std::shared_ptr<Device> device);
 } // namespace toffoo::vk

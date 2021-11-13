@@ -4,6 +4,8 @@
 #include <vulkan/vulkan.h>
 namespace toffoo::vk {
 class Device;
+class RenderPass;
+class Semaphore;
 class SwapChain {
 private:
   VkSwapchainKHR swapchain;
@@ -26,6 +28,12 @@ public:
   VkExtent2D getExtent();
 
   VkFormat getImageFormat();
+
+  std::vector<VkImageView> &getImageViews();
+
+  uint32_t getNextImageIdx(Semaphore &semaphore);
+
+  void present(uint32_t imgIdx, Semaphore &wait);
 
   ~SwapChain();
 };

@@ -1,7 +1,11 @@
+#include "vk/CommandBuffers.h"
+#include "vk/CommandPool.h"
 #include "vk/Device.h"
+#include "vk/Framebuffer.h"
 #include "vk/Instance.h"
 #include "vk/Pipeline.h"
 #include "vk/RenderPass.h"
+#include "vk/Semaphore.h"
 #include "vk/Shader.h"
 #include "vk/Surface.h"
 #include "vk/SwapChain.h"
@@ -38,7 +42,15 @@ int main() {
 
   auto swapchain = toffoo::vk::createSwapchain(device, width, height);
 
-  auto renderPass = toffoo::vk::craeteRenderPass(swapchain, device);
+  auto renderPass = toffoo::vk::createRenderPass(swapchain, device);
+
+  auto framebuffers =
+      toffoo::vk::createFramebuffers(device, swapchain, renderPass);
+
+  auto commandPool = toffoo::vk::createCommandPool(device);
+
+  auto commandBuffers = toffoo::vk::createCommandBuffers(device, commandPool,
+                                                         framebuffers.size());
 
   toffoo::vk::GraphicsPipelineBuilder pipelineBuilder(device, renderPass);
 
@@ -57,9 +69,28 @@ int main() {
 
   auto pipeline = pipelineBuilder.build();
 
+  toffoo::vk::Semaphore imageAvailable(device);
+  toffoo::vk::Semaphore renderFinished(device);
+
+  for (size_t i = 0; i < framebuffers.size(); ++i) {
+    commandBuffers->begin(i);
+    commandBuffers->beginRenderPass(i, renderPass, framebuffers[i],
+                                    swapchain->getExtent());
+    commandBuffers->bindPipeline(i, pipeline);
+    commandBuffers->draw(i, 3, 1, 0, 0);
+    commandBuffers->endRenderPass(i);
+    commandBuffers->end(i);
+  }
+
   while (!glfwWindowShouldClose(window)) {
     glfwPollEvents();
+    auto nextImg = swapchain->getNextImageIdx(imageAvailable);
+    commandBuffers->submit(nextImg, imageAvailable, renderFinished);
+    swapchain->present(nextImg, renderFinished);
+    device->waitPresentQueue();
   }
+
+  device->waitIdle();
 
   glfwDestroyWindow(window);
 

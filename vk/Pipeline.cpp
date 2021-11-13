@@ -23,7 +23,7 @@ GraphicsPipeline::GraphicsPipeline(GraphicsPipelineBuilder &builder)
       .pMultisampleState = &builder.miltisamplingStateInfo,
       .pDepthStencilState = nullptr,
       .pColorBlendState = &builder.colorBlendingStateInfo,
-      .pDynamicState = &builder.dynamicStateInfo,
+      .pDynamicState = nullptr, // &builder.dynamicStateInfo,
       .layout = builder.pipelineLayout->handle(),
       .renderPass = builder.renderPass->handle(),
       .subpass = 0,
