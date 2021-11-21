@@ -116,22 +116,33 @@ fn main() {
         false,
         [
             Vertex {
-                position: [-0.5, -0.25],
-                color: [0.0, 0.0, 1.0],
+                position: [-0.5, -0.5],
+                color: [1.0, 0.0, 1.0],
             },
             Vertex {
-                position: [0.0, 0.5],
+                position: [0.5, -0.5],
                 color: [0.0, 1.0, 0.0],
             },
             Vertex {
-                position: [0.25, -0.1],
-                color: [1.0, 0.0, 0.0],
+                position: [0.5, 0.5],
+                color: [0.0, 0.0, 1.0],
+            },
+            Vertex {
+                position: [-0.5, 0.5],
+                color: [1.0, 1.0, 0.0],
             },
         ]
         .iter()
         .cloned(),
     )
     .unwrap();
+
+    let index_buffer = CpuAccessibleBuffer::from_iter(
+        device.clone(), 
+        BufferUsage::all(),
+        false,
+        [0u16, 1u16, 2u16, 2u16, 3u16, 0u16].iter().cloned()
+    ).unwrap();
 
     mod vs {
         vulkano_shaders::shader! {
@@ -312,8 +323,9 @@ fn main() {
                     .unwrap()
                     .set_viewport(0, [viewport.clone()])
                     .bind_pipeline_graphics(pipeline.clone())
+                    .bind_index_buffer(index_buffer.clone())
                     .bind_vertex_buffers(0, vertex_buffer.clone())
-                    .draw(vertex_buffer.len() as u32, 1, 0, 0)
+                    .draw_indexed(index_buffer.len() as u32, 1, 0, 0, 0)
                     .unwrap()
                     .end_render_pass()
                     .unwrap();
