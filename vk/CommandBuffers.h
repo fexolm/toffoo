@@ -12,6 +12,7 @@ class Framebuffer;
 class GraphicsPipeline;
 class Semaphore;
 class VertexBuffer;
+class IndexBuffer;
 
 class CommandBuffers {
 private:
@@ -37,8 +38,11 @@ public:
   void bindVertexBuffer(size_t idx, std::shared_ptr<VertexBuffer> vertexBuffer,
                         size_t binding);
 
-  void draw(size_t idx, size_t vertexCount, size_t instanceCount,
-            size_t firstVertex, size_t firstInstance);
+  void bindIndexBuffer(size_t idx, std::shared_ptr<IndexBuffer> indexBuffer,
+                       size_t binding);
+
+  void draw(size_t idx, size_t indicesSize, size_t instanceCount,
+            size_t firstIndex, size_t vertexOffset, size_t firstInstance);
 
   void endRenderPass(size_t idx);
 

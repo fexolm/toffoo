@@ -2,6 +2,7 @@
 #include "CommandPool.h"
 #include "Device.h"
 #include "Framebuffer.h"
+#include "IndexBuffer.h"
 #include "Pipeline.h"
 #include "RenderPass.h"
 #include "Semaphore.h"
@@ -57,10 +58,11 @@ void CommandBuffers::bindPipeline(size_t idx,
                     pipeline->handle());
 }
 
-void CommandBuffers::draw(size_t idx, size_t vertexCount, size_t instanceCount,
-                          size_t firstVertex, size_t firstInstance) {
-  vkCmdDraw(buffers[idx], vertexCount, instanceCount, firstVertex,
-            firstInstance);
+void CommandBuffers::draw(size_t idx, size_t indicesSize, size_t instanceCount,
+                          size_t firstIndex, size_t vertexOffset,
+                          size_t firstInstance) {
+  vkCmdDrawIndexed(buffers[idx], indicesSize, instanceCount, firstIndex,
+                   vertexOffset, firstInstance);
 }
 
 void CommandBuffers::bindVertexBuffer(
@@ -68,6 +70,14 @@ void CommandBuffers::bindVertexBuffer(
   VkDeviceSize offsets[] = {0};
   auto handle = vertexBuffer->handle();
   vkCmdBindVertexBuffers(buffers[idx], binding, 1, &handle, offsets);
+}
+
+void CommandBuffers::bindIndexBuffer(size_t idx,
+                                     std::shared_ptr<IndexBuffer> indexBuffer,
+                                     size_t binding) {
+  VkDeviceSize offsets[] = {0};
+  vkCmdBindIndexBuffer(buffers[idx], indexBuffer->handle(), binding,
+                       VK_INDEX_TYPE_UINT16);
 }
 
 void CommandBuffers::endRenderPass(size_t idx) {

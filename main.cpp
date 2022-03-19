@@ -2,6 +2,7 @@
 #include "vk/CommandPool.h"
 #include "vk/Device.h"
 #include "vk/Framebuffer.h"
+#include "vk/IndexBuffer.h"
 #include "vk/Instance.h"
 #include "vk/Pipeline.h"
 #include "vk/RenderPass.h"
@@ -83,9 +84,12 @@ int main() {
   auto commandBuffers = toffoo::vk::createCommandBuffers(device, commandPool,
                                                          framebuffers.size());
 
-  const std::vector<Vertex> vertices = {{{0.0f, -0.5f}, {1.0f, 1.0f, 1.0f}},
-                                        {{0.5f, 0.5f}, {0.0f, 1.0f, 0.0f}},
-                                        {{-0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}}};
+  const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
+                                        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
+                                        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
+                                        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+
+  const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
   auto bindingDescription = Vertex::getBindingDescription();
   auto attributeDescriptions = Vertex::getAttributeDescriptions();
@@ -93,7 +97,11 @@ int main() {
   auto vertexBuffer =
       toffoo::vk::createVertexBuffer(device, sizeof(Vertex) * vertices.size());
 
+  auto indexBuffer =
+      toffoo::vk::createIndexBuffer(device, sizeof(uint16_t) * indices.size());
+
   vertexBuffer->fill_from((void *)vertices.data());
+  indexBuffer->fill_from((void *)indices.data());
 
   toffoo::vk::GraphicsPipelineBuilder pipelineBuilder(device, renderPass);
 
@@ -122,7 +130,8 @@ int main() {
                                     swapchain->getExtent());
     commandBuffers->bindPipeline(i, pipeline);
     commandBuffers->bindVertexBuffer(i, vertexBuffer, 0);
-    commandBuffers->draw(i, 3, 1, 0, 0);
+    commandBuffers->bindIndexBuffer(i, indexBuffer, 0);
+    commandBuffers->draw(i, indices.size(), 1, 0, 0, 0);
     commandBuffers->endRenderPass(i);
     commandBuffers->end(i);
   }
