@@ -63,13 +63,16 @@ void GraphicsPipelineBuilder::addFragmentShader(
       .pName = "main"};
 }
 
-void GraphicsPipelineBuilder::addVertexInputState() {
+void GraphicsPipelineBuilder::addVertexInputState(
+    const std::vector<VkVertexInputAttributeDescription> &attributeDescriptions,
+    const VkVertexInputBindingDescription &bindingDescription) {
   vertexInputStateInfo = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-      .vertexBindingDescriptionCount = 0,
-      .pVertexBindingDescriptions = nullptr,
-      .vertexAttributeDescriptionCount = 0,
-      .pVertexAttributeDescriptions = nullptr};
+      .vertexBindingDescriptionCount = 1,
+      .pVertexBindingDescriptions = &bindingDescription,
+      .vertexAttributeDescriptionCount =
+          static_cast<uint32_t>(attributeDescriptions.size()),
+      .pVertexAttributeDescriptions = attributeDescriptions.data()};
 }
 
 void GraphicsPipelineBuilder::addInputAssemblyState() {

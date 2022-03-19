@@ -11,6 +11,7 @@ class RenderPass;
 class Framebuffer;
 class GraphicsPipeline;
 class Semaphore;
+class VertexBuffer;
 
 class CommandBuffers {
 private:
@@ -32,6 +33,9 @@ public:
                        VkExtent2D extent);
 
   void bindPipeline(size_t idx, std::shared_ptr<GraphicsPipeline> pipeline);
+
+  void bindVertexBuffer(size_t idx, std::shared_ptr<VertexBuffer> vertexBuffer,
+                        size_t binding);
 
   void draw(size_t idx, size_t vertexCount, size_t instanceCount,
             size_t firstVertex, size_t firstInstance);

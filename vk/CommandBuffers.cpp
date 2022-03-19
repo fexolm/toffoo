@@ -6,6 +6,7 @@
 #include "RenderPass.h"
 #include "Semaphore.h"
 #include "Utils.h"
+#include "VertexBuffer.h"
 
 namespace toffoo::vk {
 CommandBuffers::CommandBuffers(std::shared_ptr<Device> device,
@@ -60,6 +61,13 @@ void CommandBuffers::draw(size_t idx, size_t vertexCount, size_t instanceCount,
                           size_t firstVertex, size_t firstInstance) {
   vkCmdDraw(buffers[idx], vertexCount, instanceCount, firstVertex,
             firstInstance);
+}
+
+void CommandBuffers::bindVertexBuffer(
+    size_t idx, std::shared_ptr<VertexBuffer> vertexBuffer, size_t binding) {
+  VkDeviceSize offsets[] = {0};
+  auto handle = vertexBuffer->handle();
+  vkCmdBindVertexBuffers(buffers[idx], binding, 1, &handle, offsets);
 }
 
 void CommandBuffers::endRenderPass(size_t idx) {

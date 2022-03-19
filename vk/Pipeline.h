@@ -1,6 +1,8 @@
 #pragma once
 #include <memory>
+#include <vector>
 #include <vulkan/vulkan.h>
+
 namespace toffoo::vk {
 class Shader;
 class SwapChain;
@@ -74,7 +76,10 @@ public:
 
   void addVertexShader(std::shared_ptr<Shader> shader);
   void addFragmentShader(std::shared_ptr<Shader> shader);
-  void addVertexInputState();
+  void addVertexInputState(
+      const std::vector<VkVertexInputAttributeDescription>
+          &attributeDescriptions,
+      const VkVertexInputBindingDescription &bindingDescription);
   void addInputAssemblyState();
   void addViewportState(std::shared_ptr<SwapChain> swapchain, float width,
                         float height);
