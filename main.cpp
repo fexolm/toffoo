@@ -4,6 +4,7 @@
 #include "vk/DescriptorSets.h"
 #include "vk/Device.h"
 #include "vk/Framebuffer.h"
+#include "vk/Image.h"
 #include "vk/IndexBuffer.h"
 #include "vk/Instance.h"
 #include "vk/Pipeline.h"
@@ -23,6 +24,9 @@
 #include <glm/gtx/rotate_vector.hpp>
 #include <vector>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "thirdparty/stb_image.h"
+
 std::vector<const char *> getRequiredExtensions() {
   uint32_t glfwExtensionCount = 0;
   auto glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -35,18 +39,21 @@ std::vector<const char *> getRequiredExtensions() {
 struct Vertex {
   glm::vec2 pos;
   glm::vec3 color;
+  glm::vec2 texCoord;
 
   static VkVertexInputBindingDescription getBindingDescription() {
     VkVertexInputBindingDescription bindingDescription{};
     bindingDescription.binding = 0;
     bindingDescription.stride = sizeof(Vertex);
     bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
     return bindingDescription;
   }
 
   static std::vector<VkVertexInputAttributeDescription>
   getAttributeDescriptions() {
-    std::vector<VkVertexInputAttributeDescription> attributeDescriptions(2);
+    std::vector<VkVertexInputAttributeDescription> attributeDescriptions(3);
+
     attributeDescriptions[0].binding = 0;
     attributeDescriptions[0].location = 0;
     attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
@@ -56,6 +63,12 @@ struct Vertex {
     attributeDescriptions[1].location = 1;
     attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
     attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+    attributeDescriptions[2].binding = 0;
+    attributeDescriptions[2].location = 2;
+    attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
+    attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+
     return attributeDescriptions;
   }
 };
@@ -117,10 +130,11 @@ int main() {
   auto commandBuffers = toffoo::vk::createCommandBuffers(device, commandPool,
                                                          framebuffers.size());
 
-  const std::vector<Vertex> vertices = {{{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}},
-                                        {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}},
-                                        {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
-                                        {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}}};
+  const std::vector<Vertex> vertices = {
+      {{-0.5f, -0.5f}, {1.0f, 0.0f, 0.0f}, {1.0f, 0.0f}},
+      {{0.5f, -0.5f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f}},
+      {{0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f}},
+      {{-0.5f, 0.5f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f}}};
 
   const std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
 
@@ -152,6 +166,8 @@ int main() {
   pipelineBuilder.addDynamicState();
   pipelineBuilder.addDescritorSetLayoutBinding(
       toffoo::vk::UniformBuffer::getDescriptorSetLayoutBinding(0));
+  pipelineBuilder.addDescritorSetLayoutBinding(
+      toffoo::vk::Image::getDescriptorSetLayoutBinding(1));
 
   auto pipeline = pipelineBuilder.build();
 
@@ -168,8 +184,15 @@ int main() {
   auto descriptorSets = toffoo::vk::createDescriptorSets(
       device, descriptorPool, pipeline, framebuffers.size());
 
+  int texWidth, texHeight, texChannels;
+  auto texImg = stbi_load("texture.jpg", &texWidth, &texHeight, &texChannels,
+                          STBI_rgb_alpha);
+
+  auto image = toffoo::vk::Image::create(device, commandPool, texImg, texWidth,
+                                         texHeight);
+
   for (int i = 0; i < framebuffers.size(); ++i) {
-    descriptorSets->update(i, uniformBuffers[i]);
+    descriptorSets->update(i, uniformBuffers[i], image);
   }
 
   toffoo::vk::Semaphore imageAvailable(device);

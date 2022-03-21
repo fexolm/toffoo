@@ -109,6 +109,19 @@ void CommandBuffers::submit(size_t idx, Semaphore &waitSemaphore,
                                 VK_NULL_HANDLE));
 }
 
+void CommandBuffers::submit(size_t idx) {
+  VkSubmitInfo submitInfo{
+      .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+      .commandBufferCount = 1,
+      .pCommandBuffers = &buffers[idx],
+  };
+
+  VK_THROW_NOT_OK(vkQueueSubmit(device->getGraphicsQueue(), 1, &submitInfo,
+                                VK_NULL_HANDLE));
+
+  VK_THROW_NOT_OK(vkQueueWaitIdle(device->getGraphicsQueue()));
+}
+
 std::shared_ptr<CommandBuffers>
 createCommandBuffers(std::shared_ptr<Device> device,
                      std::shared_ptr<CommandPool> pool, size_t size) {

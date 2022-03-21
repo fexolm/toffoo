@@ -2,6 +2,7 @@
 #include "Buffer.h"
 #include "DescriptorSetPool.h"
 #include "Device.h"
+#include "Image.h"
 #include "Pipeline.h"
 
 namespace toffoo::vk {
@@ -28,24 +29,39 @@ DescriptorSets::DescriptorSets(std::shared_ptr<Device> device,
 
 const VkDescriptorSet &DescriptorSets::get(size_t idx) { return sets[idx]; }
 
-void DescriptorSets::update(size_t idx, std::shared_ptr<Buffer> buffer) {
+void DescriptorSets::update(size_t idx, std::shared_ptr<Buffer> buffer,
+                            std::shared_ptr<Image> texture) {
   VkDescriptorBufferInfo bufferInfo{};
   bufferInfo.buffer = buffer->handle();
   bufferInfo.offset = 0;
   bufferInfo.range = VK_WHOLE_SIZE;
 
-  VkWriteDescriptorSet descriptorWrite{};
-  descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  descriptorWrite.dstSet = sets[idx];
-  descriptorWrite.dstBinding = 0;
-  descriptorWrite.dstArrayElement = 0;
-  descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  descriptorWrite.descriptorCount = 1;
-  descriptorWrite.pBufferInfo = &bufferInfo;
-  descriptorWrite.pImageInfo = nullptr;
-  descriptorWrite.pTexelBufferView = nullptr;
+  VkDescriptorImageInfo imageInfo{};
+  imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imageInfo.imageView = texture->getView();
+  imageInfo.sampler = texture->getSampler();
 
-  vkUpdateDescriptorSets(device->handle(), 1, &descriptorWrite, 0, nullptr);
+  std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+
+  descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptorWrites[0].dstSet = sets[idx];
+  descriptorWrites[0].dstBinding = 0;
+  descriptorWrites[0].dstArrayElement = 0;
+  descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  descriptorWrites[0].descriptorCount = 1;
+  descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+  descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptorWrites[1].dstSet = sets[idx];
+  descriptorWrites[1].dstBinding = 1;
+  descriptorWrites[1].dstArrayElement = 0;
+  descriptorWrites[1].descriptorType =
+      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  descriptorWrites[1].descriptorCount = 1;
+  descriptorWrites[1].pImageInfo = &imageInfo;
+
+  vkUpdateDescriptorSets(device->handle(), descriptorWrites.size(),
+                         descriptorWrites.data(), 0, nullptr);
 }
 
 void DescriptorSets::bind(VkCommandBuffer cb, size_t idx) {

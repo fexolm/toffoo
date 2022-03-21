@@ -49,9 +49,12 @@ public:
   void end(size_t idx);
 
   void submit(size_t idx, Semaphore &waitSemaphore, Semaphore &signalSemaphore);
+
+  void submit(size_t idx);
 };
 
 std::shared_ptr<CommandBuffers>
 createCommandBuffers(std::shared_ptr<Device> device,
                      std::shared_ptr<CommandPool> pool, size_t size);
+
 } // namespace toffoo::vk

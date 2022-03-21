@@ -21,5 +21,6 @@ add_executable(toffoo
     vk/UniformBuffer.cpp
     vk/DescriptorSetPool.cpp
     vk/DescriptorSets.cpp
+    vk/Image.cpp
 )
 target_link_libraries(toffoo glfw vulkan)

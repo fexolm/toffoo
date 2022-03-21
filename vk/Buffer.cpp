@@ -1,23 +1,11 @@
 #include "Buffer.h"
+#include "CommandBuffers.h"
+#include "CommandPool.h"
 #include "Device.h"
+#include "Utils.h"
 #include <cstring>
 
 namespace toffoo::vk {
-
-uint32_t findMemoryType(VkPhysicalDevice physicalDevice, uint32_t typeFilter,
-                        VkMemoryPropertyFlags properties) {
-  VkPhysicalDeviceMemoryProperties memProperties;
-  vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memProperties);
-
-  for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-    if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags &
-                                    properties) == properties) {
-      return i;
-    }
-  }
-
-  throw std::runtime_error("failed to find suitable memory type!");
-}
 
 Buffer::Buffer(std::shared_ptr<Device> device, size_t size,
                VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
@@ -54,6 +42,8 @@ Buffer::Buffer(std::shared_ptr<Device> device, size_t size,
 
 VkBuffer Buffer::handle() { return bufferHandle; }
 
+size_t Buffer::size() { return buffer_size; }
+
 void Buffer::fill_from(void *data) {
   void *mapped_buf;
   vkMapMemory(device->handle(), vertexBufferMemory, 0, buffer_size, 0,
@@ -65,5 +55,19 @@ void Buffer::fill_from(void *data) {
 Buffer::~Buffer() {
   vkDestroyBuffer(device->handle(), bufferHandle, nullptr);
   vkFreeMemory(device->handle(), vertexBufferMemory, nullptr);
+}
+
+void Buffer::copy(std::shared_ptr<Device> device,
+                  std::shared_ptr<CommandPool> command_pool,
+                  std::shared_ptr<Buffer> src, std::shared_ptr<Buffer> dst) {
+  auto cb = createCommandBuffers(device, command_pool, 1);
+  cb->begin(0);
+
+  VkBufferCopy copyRegion{};
+  copyRegion.size = src->size();
+  vkCmdCopyBuffer(cb->get(0), src->handle(), dst->handle(), 1, &copyRegion);
+
+  cb->end(0);
+  cb->submit(0);
 }
 } // namespace toffoo::vk

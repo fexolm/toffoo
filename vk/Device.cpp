@@ -71,13 +71,17 @@ bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface) {
   bool hasPresentQueue = findPresentFamily(device, surface, idx);
   bool extensionsSupported = checkDeviceExtensionSupport(device);
 
+  VkPhysicalDeviceFeatures supportedFeatures;
+  vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
+
   // TODO: also verify that swapchain supports at least 1 format and at least 1
   // presetMode
 
   return (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
           deviceProperties.deviceType ==
               VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) &&
-         hasGraphicsQueue && hasPresentQueue && extensionsSupported;
+         hasGraphicsQueue && hasPresentQueue && extensionsSupported &&
+         supportedFeatures.samplerAnisotropy;
 }
 
 VkPhysicalDevice peekDevice(VkInstance instance, VkSurfaceKHR surface) {
@@ -128,7 +132,9 @@ Device::Device(std::shared_ptr<Instance> instance,
          .pQueuePriorities = &queuePriority});
   }
 
-  VkPhysicalDeviceFeatures deviceFeatures{};
+  VkPhysicalDeviceFeatures deviceFeatures{
+      .samplerAnisotropy = VK_TRUE,
+  };
 
   VkDeviceCreateInfo createInfo{
       .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,

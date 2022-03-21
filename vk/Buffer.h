@@ -5,6 +5,7 @@
 namespace toffoo::vk {
 
 class Device;
+class CommandPool;
 class Buffer {
 protected:
   VkBuffer bufferHandle;
@@ -22,6 +23,15 @@ public:
 
   void fill_from(void *data);
 
+  size_t size();
+
   virtual ~Buffer();
+
+  static void copy(std::shared_ptr<Device> device,
+                   std::shared_ptr<CommandPool> command_pool,
+                   std::shared_ptr<Buffer> src, std::shared_ptr<Buffer> dst);
 };
+
+class CommandPool;
+
 } // namespace toffoo::vk

@@ -9,6 +9,7 @@ class Device;
 class GraphicsPipeline;
 class DescriptorSetPool;
 class Buffer;
+class Image;
 
 class DescriptorSets {
 private:
@@ -25,7 +26,8 @@ public:
 
   const VkDescriptorSet &get(size_t idx);
 
-  void update(size_t idx, std::shared_ptr<Buffer> buffer);
+  void update(size_t idx, std::shared_ptr<Buffer> buffer,
+              std::shared_ptr<Image> texture);
 
   void bind(VkCommandBuffer cb, size_t idx);
 };
