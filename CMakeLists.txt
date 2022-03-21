@@ -18,5 +18,8 @@ add_executable(toffoo
     vk/VertexBuffer.cpp 
     vk/Buffer.cpp
     vk/IndexBuffer.cpp
+    vk/UniformBuffer.cpp
+    vk/DescriptorSetPool.cpp
+    vk/DescriptorSets.cpp
 )
 target_link_libraries(toffoo glfw vulkan)

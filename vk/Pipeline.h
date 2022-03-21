@@ -10,6 +10,7 @@ class Device;
 class GraphicsPipelineBuilder;
 class RenderPass;
 class PipelineLayout;
+class DescriptorSetLayout;
 
 class GraphicsPipeline {
 
@@ -20,6 +21,8 @@ private:
 
   std::shared_ptr<PipelineLayout> pipelineLayout;
 
+  std::shared_ptr<DescriptorSetLayout> descriptorSetLayout;
+
   std::shared_ptr<RenderPass> renderPass;
 
 public:
@@ -27,7 +30,26 @@ public:
 
   VkPipeline handle();
 
+  std::shared_ptr<PipelineLayout> getLayout();
+
+  std::shared_ptr<DescriptorSetLayout> getDescriptorSetLayout();
+
   ~GraphicsPipeline();
+};
+
+class DescriptorSetLayout {
+private:
+  std::shared_ptr<Device> device;
+  VkDescriptorSetLayout layout;
+
+public:
+  DescriptorSetLayout(
+      std::shared_ptr<Device> device,
+      const std::vector<VkDescriptorSetLayoutBinding> &bindings);
+
+  const VkDescriptorSetLayout &handle();
+
+  ~DescriptorSetLayout();
 };
 
 class PipelineLayout {
@@ -36,7 +58,8 @@ private:
   VkPipelineLayout layout;
 
 public:
-  PipelineLayout(std::shared_ptr<Device> device);
+  PipelineLayout(std::shared_ptr<Device> device,
+                 std::shared_ptr<DescriptorSetLayout> setLayout);
 
   VkPipelineLayout handle();
 
@@ -65,10 +88,10 @@ private:
 
   VkPipelineDynamicStateCreateInfo dynamicStateInfo;
 
-  std::shared_ptr<PipelineLayout> pipelineLayout;
-
   std::shared_ptr<Shader> vertShader;
   std::shared_ptr<Shader> fragShader;
+
+  std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
 
 public:
   GraphicsPipelineBuilder(std::shared_ptr<Device> device,
@@ -90,6 +113,8 @@ public:
   void addDynamicState();
 
   void setupPipelineLayout();
+
+  void addDescritorSetLayoutBinding(VkDescriptorSetLayoutBinding binding);
 
   std::shared_ptr<GraphicsPipeline> build();
 

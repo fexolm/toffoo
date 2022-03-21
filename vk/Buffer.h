@@ -6,7 +6,7 @@ namespace toffoo::vk {
 
 class Device;
 class Buffer {
-private:
+protected:
   VkBuffer bufferHandle;
   VkDeviceMemory vertexBufferMemory;
 

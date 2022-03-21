@@ -1,5 +1,7 @@
 #include "vk/CommandBuffers.h"
 #include "vk/CommandPool.h"
+#include "vk/DescriptorSetPool.h"
+#include "vk/DescriptorSets.h"
 #include "vk/Device.h"
 #include "vk/Framebuffer.h"
 #include "vk/IndexBuffer.h"
@@ -10,12 +12,16 @@
 #include "vk/Shader.h"
 #include "vk/Surface.h"
 #include "vk/SwapChain.h"
+#include "vk/UniformBuffer.h"
 #include "vk/VertexBuffer.h"
 
 #include <GLFW/glfw3.h>
-#include <vector>
-
+#include <chrono>
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtx/projection.hpp>
+#include <glm/gtx/rotate_vector.hpp>
+#include <vector>
 
 std::vector<const char *> getRequiredExtensions() {
   uint32_t glfwExtensionCount = 0;
@@ -53,6 +59,33 @@ struct Vertex {
     return attributeDescriptions;
   }
 };
+
+struct UniformBufferObject {
+  glm::mat4 model;
+  glm::mat4 view;
+  glm::mat4 proj;
+};
+
+void updateUniformBuffer(std::shared_ptr<toffoo::vk::UniformBuffer> buffer,
+                         size_t width, size_t height) {
+  static auto startTime = std::chrono::high_resolution_clock::now();
+
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  float time = std::chrono::duration<float, std::chrono::seconds::period>(
+                   currentTime - startTime)
+                   .count();
+
+  UniformBufferObject ubo{};
+  ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f),
+                          glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.view =
+      glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f),
+                  glm::vec3(0.0f, 0.0f, 1.0f));
+  ubo.proj =
+      glm::perspective(glm::radians(45.0f), width / (float)height, 0.1f, 10.0f);
+  ubo.proj[1][1] *= -1;
+  buffer->fill_from(&ubo);
+}
 
 int main() {
   glfwInit();
@@ -117,9 +150,27 @@ int main() {
   pipelineBuilder.addMultisamplintState();
   pipelineBuilder.addColorBlendState();
   pipelineBuilder.addDynamicState();
-  pipelineBuilder.setupPipelineLayout();
+  pipelineBuilder.addDescritorSetLayoutBinding(
+      toffoo::vk::UniformBuffer::getDescriptorSetLayoutBinding(0));
 
   auto pipeline = pipelineBuilder.build();
+
+  std::vector<std::shared_ptr<toffoo::vk::UniformBuffer>> uniformBuffers(
+      framebuffers.size());
+
+  for (auto &b : uniformBuffers) {
+    b = toffoo::vk::createUniformBuffer(device, sizeof(UniformBufferObject));
+  }
+
+  auto descriptorPool =
+      toffoo::vk::createDescriptorSetPool(device, framebuffers.size());
+
+  auto descriptorSets = toffoo::vk::createDescriptorSets(
+      device, descriptorPool, pipeline, framebuffers.size());
+
+  for (int i = 0; i < framebuffers.size(); ++i) {
+    descriptorSets->update(i, uniformBuffers[i]);
+  }
 
   toffoo::vk::Semaphore imageAvailable(device);
   toffoo::vk::Semaphore renderFinished(device);
@@ -131,6 +182,7 @@ int main() {
     commandBuffers->bindPipeline(i, pipeline);
     commandBuffers->bindVertexBuffer(i, vertexBuffer, 0);
     commandBuffers->bindIndexBuffer(i, indexBuffer, 0);
+    descriptorSets->bind(commandBuffers->get(i), i);
     commandBuffers->draw(i, indices.size(), 1, 0, 0, 0);
     commandBuffers->endRenderPass(i);
     commandBuffers->end(i);
@@ -140,6 +192,7 @@ int main() {
     glfwPollEvents();
     auto nextImg = swapchain->getNextImageIdx(imageAvailable);
     commandBuffers->submit(nextImg, imageAvailable, renderFinished);
+    updateUniformBuffer(uniformBuffers[nextImg], 800, 600);
     swapchain->present(nextImg, renderFinished);
     device->waitPresentQueue();
   }

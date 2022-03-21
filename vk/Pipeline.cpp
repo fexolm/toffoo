@@ -8,10 +8,16 @@
 namespace toffoo::vk {
 
 GraphicsPipeline::GraphicsPipeline(GraphicsPipelineBuilder &builder)
-    : device(builder.device), pipelineLayout(builder.pipelineLayout),
-      renderPass(builder.renderPass) {
+    : device(builder.device), renderPass(builder.renderPass) {
   VkPipelineShaderStageCreateInfo shaders[2] = {builder.vertShaderStageInfo,
                                                 builder.fragShaderStageInfo};
+
+  descriptorSetLayout = std::make_shared<DescriptorSetLayout>(
+      device, builder.descriptorSetLayoutBindings);
+
+  pipelineLayout =
+      std::make_shared<PipelineLayout>(device, descriptorSetLayout);
+
   VkGraphicsPipelineCreateInfo pipelineInfo{
       .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
       .stageCount = 2,
@@ -24,7 +30,7 @@ GraphicsPipeline::GraphicsPipeline(GraphicsPipelineBuilder &builder)
       .pDepthStencilState = nullptr,
       .pColorBlendState = &builder.colorBlendingStateInfo,
       .pDynamicState = nullptr, // &builder.dynamicStateInfo,
-      .layout = builder.pipelineLayout->handle(),
+      .layout = pipelineLayout->handle(),
       .renderPass = builder.renderPass->handle(),
       .subpass = 0,
       .basePipelineHandle = VK_NULL_HANDLE,
@@ -35,6 +41,15 @@ GraphicsPipeline::GraphicsPipeline(GraphicsPipelineBuilder &builder)
 }
 
 VkPipeline GraphicsPipeline::handle() { return pipeline; }
+
+std::shared_ptr<PipelineLayout> GraphicsPipeline::getLayout() {
+  return pipelineLayout;
+}
+
+std::shared_ptr<DescriptorSetLayout>
+GraphicsPipeline::getDescriptorSetLayout() {
+  return descriptorSetLayout;
+}
 
 GraphicsPipeline::~GraphicsPipeline() {
   vkDestroyPipeline(device->handle(), pipeline, nullptr);
@@ -112,7 +127,7 @@ void GraphicsPipelineBuilder::addRasterizationState() {
       .rasterizerDiscardEnable = VK_FALSE,
       .polygonMode = VK_POLYGON_MODE_FILL,
       .cullMode = VK_CULL_MODE_BACK_BIT,
-      .frontFace = VK_FRONT_FACE_CLOCKWISE,
+      .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
       .depthBiasEnable = VK_FALSE,
       .depthBiasConstantFactor = 0.0f,
       .depthBiasClamp = 0.0f,
@@ -164,16 +179,13 @@ void GraphicsPipelineBuilder::addDynamicState() {
                       .pDynamicStates = dynamicStates};
 }
 
-void GraphicsPipelineBuilder::setupPipelineLayout() {
-  pipelineLayout = std::make_shared<PipelineLayout>(device);
-}
-
-PipelineLayout::PipelineLayout(std::shared_ptr<Device> device)
+PipelineLayout::PipelineLayout(std::shared_ptr<Device> device,
+                               std::shared_ptr<DescriptorSetLayout> setLayout)
     : device(device), layout(layout) {
   VkPipelineLayoutCreateInfo pipelineLayoutInfo = {
       .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-      .setLayoutCount = 0,
-      .pSetLayouts = nullptr,
+      .setLayoutCount = 1,
+      .pSetLayouts = &setLayout->handle(),
       .pushConstantRangeCount = 0,
       .pPushConstantRanges = nullptr};
 
@@ -181,10 +193,36 @@ PipelineLayout::PipelineLayout(std::shared_ptr<Device> device)
                                          nullptr, &layout));
 }
 
+void GraphicsPipelineBuilder::addDescritorSetLayoutBinding(
+    VkDescriptorSetLayoutBinding binding) {
+  descriptorSetLayoutBindings.push_back(binding);
+}
+
 VkPipelineLayout PipelineLayout::handle() { return layout; }
 
 PipelineLayout::~PipelineLayout() {
   vkDestroyPipelineLayout(device->handle(), layout, nullptr);
+}
+
+DescriptorSetLayout::DescriptorSetLayout(
+    std::shared_ptr<Device> device,
+    const std::vector<VkDescriptorSetLayoutBinding> &bindings)
+    : device(device) {
+  VkDescriptorSetLayoutCreateInfo layoutInfo{};
+  layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  layoutInfo.bindingCount = bindings.size();
+  layoutInfo.pBindings = bindings.data();
+
+  if (vkCreateDescriptorSetLayout(device->handle(), &layoutInfo, nullptr,
+                                  &layout) != VK_SUCCESS) {
+    throw std::runtime_error("failed to create descriptor set layout!");
+  }
+}
+
+const VkDescriptorSetLayout &DescriptorSetLayout::handle() { return layout; }
+
+DescriptorSetLayout::~DescriptorSetLayout() {
+  vkDestroyDescriptorSetLayout(device->handle(), layout, nullptr);
 }
 
 std::shared_ptr<GraphicsPipeline> GraphicsPipelineBuilder::build() {

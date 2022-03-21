@@ -25,7 +25,7 @@ public:
   CommandBuffers(std::shared_ptr<Device> device,
                  std::shared_ptr<CommandPool> pool, size_t size);
 
-  std::vector<VkCommandBuffer> &getBuffers();
+  const VkCommandBuffer &get(size_t idx);
 
   void begin(size_t idx);
 

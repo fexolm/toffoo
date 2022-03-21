@@ -24,7 +24,7 @@ CommandBuffers::CommandBuffers(std::shared_ptr<Device> device,
       vkAllocateCommandBuffers(device->handle(), &allocInfo, buffers.data()));
 }
 
-std::vector<VkCommandBuffer> &CommandBuffers::getBuffers() { return buffers; }
+const VkCommandBuffer &CommandBuffers::get(size_t idx) { return buffers[idx]; }
 
 void CommandBuffers::begin(size_t idx) {
   VkCommandBufferBeginInfo beginInfo{
