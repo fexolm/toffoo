@@ -11,7 +11,7 @@ protected:
   VkBuffer bufferHandle;
   VkDeviceMemory vertexBufferMemory;
 
-  size_t buffer_size;
+  size_t bufferSize;
 
   std::shared_ptr<Device> device;
 

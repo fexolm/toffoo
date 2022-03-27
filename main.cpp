@@ -15,6 +15,7 @@
 #include "vk/SwapChain.h"
 #include "vk/UniformBuffer.h"
 #include "vk/VertexBuffer.h"
+#include "vk/WriteDescriptorSetWrapper.h"
 
 #include <GLFW/glfw3.h>
 #include <chrono>

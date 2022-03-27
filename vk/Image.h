@@ -1,8 +1,8 @@
 #pragma once
 
+#include "WriteDescriptorSetWrapper.h"
 #include <memory>
 #include <vulkan/vulkan.h>
-
 namespace toffoo::vk {
 class Device;
 class CommandPool;
@@ -25,6 +25,8 @@ public:
   const VkImage &handle();
   const VkImageView &getView();
   const VkSampler &getSampler();
+
+  WriteDescriptorSetWrapper getWriteDescriptorSet(size_t binding);
 
   virtual ~Image();
 

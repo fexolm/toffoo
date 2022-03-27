@@ -22,5 +22,6 @@ add_executable(toffoo
     vk/DescriptorSetPool.cpp
     vk/DescriptorSets.cpp
     vk/Image.cpp
+    vk/WriteDescriptorSetWrapper.cpp
 )
 target_link_libraries(toffoo glfw vulkan)

@@ -6,12 +6,13 @@ DescriptorSetPool::DescriptorSetPool(std::shared_ptr<Device> device,
                                      size_t size)
     : device(device) {
   std::array<VkDescriptorPoolSize, 2> poolSizes{};
-  // TODO(critical): add adjustable descriptor set pool
+
+  // Allocate many descriptors
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  poolSizes[0].descriptorCount = size;
+  poolSizes[0].descriptorCount = 4096;
 
   poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  poolSizes[1].descriptorCount = size;
+  poolSizes[1].descriptorCount = 2048;
 
   VkDescriptorPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

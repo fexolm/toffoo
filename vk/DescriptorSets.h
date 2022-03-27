@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WriteDescriptorSetWrapper.h"
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>

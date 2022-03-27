@@ -17,6 +17,21 @@ UniformBuffer::getDescriptorSetLayoutBinding(int binding) {
   return uboLayoutBinding;
 }
 
+WriteDescriptorSetWrapper UniformBuffer::getWriteDescriptorSet(size_t binding) {
+  VkDescriptorBufferInfo bufferInfo = {};
+  bufferInfo.buffer = bufferHandle;
+  bufferInfo.offset = 0;
+  bufferInfo.range = bufferSize;
+
+  VkWriteDescriptorSet descriptorWrite = {};
+  descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptorWrite.dstBinding = binding;
+  descriptorWrite.dstArrayElement = 0;
+  descriptorWrite.descriptorCount = 1;
+  descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  return {descriptorWrite, bufferInfo};
+}
+
 std::shared_ptr<UniformBuffer>
 createUniformBuffer(std::shared_ptr<Device> device, size_t size) {
   return std::make_shared<UniformBuffer>(device, size);

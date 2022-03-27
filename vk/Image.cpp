@@ -94,7 +94,24 @@ Image::Image(std::shared_ptr<Device> device, size_t width, size_t height,
 const VkImage &Image::handle() { return textureImage; }
 
 const VkImageView &Image::getView() { return view; }
+
 const VkSampler &Image::getSampler() { return sampler; }
+
+WriteDescriptorSetWrapper Image::getWriteDescriptorSet(size_t binding) {
+  VkDescriptorImageInfo imageInfo{};
+  imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  imageInfo.imageView = view;
+  imageInfo.sampler = sampler;
+
+  VkWriteDescriptorSet descriptorWrites;
+  descriptorWrites.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+  descriptorWrites.dstBinding = binding;
+  descriptorWrites.dstArrayElement = 0;
+  descriptorWrites.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  descriptorWrites.descriptorCount = 1;
+
+  return {descriptorWrites, imageInfo};
+}
 
 Image::~Image() {
   vkDestroySampler(device->handle(), sampler, nullptr);

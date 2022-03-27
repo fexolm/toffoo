@@ -9,7 +9,7 @@ namespace toffoo::vk {
 
 Buffer::Buffer(std::shared_ptr<Device> device, size_t size,
                VkBufferUsageFlags usage, VkMemoryPropertyFlags properties)
-    : buffer_size(size), device(device) {
+    : bufferSize(size), device(device) {
   VkBufferCreateInfo bufferInfo{};
   bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   bufferInfo.size = size;
@@ -42,13 +42,13 @@ Buffer::Buffer(std::shared_ptr<Device> device, size_t size,
 
 VkBuffer Buffer::handle() { return bufferHandle; }
 
-size_t Buffer::size() { return buffer_size; }
+size_t Buffer::size() { return bufferSize; }
 
 void Buffer::fill_from(void *data) {
   void *mapped_buf;
-  vkMapMemory(device->handle(), vertexBufferMemory, 0, buffer_size, 0,
+  vkMapMemory(device->handle(), vertexBufferMemory, 0, bufferSize, 0,
               &mapped_buf);
-  memcpy(mapped_buf, data, buffer_size);
+  memcpy(mapped_buf, data, bufferSize);
   vkUnmapMemory(device->handle(), vertexBufferMemory);
 }
 
